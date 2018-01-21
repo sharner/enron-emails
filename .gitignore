@@ -31,3 +31,12 @@ vignettes/*.pdf
 # Temporary files created by R markdown
 *.utf8.md
 *.knit.md
+.Rproj.user
+
+# Director of data
+data
+
+# Temporary data in CSV form
+*.csv
+
+# Batch Output files

@@ -1,0 +1,63 @@
+---
+title: "Basic PaAnalysis of Enron Emails"
+output: html_notebook
+---
+
+Begin by parsing the data to extract headers from all emails.  Write headers to a CSV file.  I found a few emails with characters that could not be encoding, which I fixed by hand.  Interestingly, these emails were from Enron Japan, expressing concerns to management.
+
+```{r}
+source('../src/parse_input.R')
+con <- file('headers.csv',open="w")
+header <- create_csv_columns()
+writeLines(header, con, sep="\n")
+process_all_headers('../data/maildir', con)
+close(con)
+```
+
+Get some basic counts from the headers, including number of senders, number of recipents, number of messages and number of people.
+
+```{r}
+source('../src/format_utils.R')
+headers <- load_headers('headers.csv')
+nrow(headers)
+```
+
+See the number of emails by sender
+
+```{r}
+headers %>%
+  group_by(From) %>%
+  summarise(Count=n()) %>%
+  arrange(desc(Count))
+```
+
+See the number of emails by receiver
+
+```{r}
+recipients <- collect_recipients(headers)
+recipients %>%
+  group_by(recipient) %>%
+  summarise(Count=n()) %>%
+  arrange(desc(Count))
+```
+
+Let's find the date range of emails.  There are some outliners and really bad dates.  (TODO: investigate later if there is time about 1490 rows probably using a different date format.)  These may just have the wrong date.  Bins of roughly a month
+
+```{r}
+headers %>% 
+  ggplot(aes(Date)) + 
+  geom_freqpoly(binwidth = 86400*7*4)
+headers %>%
+  filter(year(Date)< 1999 | year(Date) > 2003) %>%
+  arrange(Date)
+```
+
+Adjusting for the outlines, we see emails by week
+
+```{r}
+headers %>% 
+  filter(year(Date) > 1999 & year(Date) < 2003) %>%
+  ggplot(aes(Date)) + 
+  geom_freqpoly(binwidth = 86400*7)
+```
+
