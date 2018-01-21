@@ -46,7 +46,7 @@ parse_file_body <- function(fn){
         l=readLines(con,1)
         if (l == "") break
       }
-      body=readLines(con,-1)
+      body=readLines(con,-1, ok=TRUE, warn=FALSE)
     }, error=function(e){
       print(paste("Error in parse_file_body: parsing file", fn))
       print(e)

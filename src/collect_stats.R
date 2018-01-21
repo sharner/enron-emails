@@ -1,6 +1,6 @@
 require(tidyverse)
 require(tidytext)
-source('../format_utils.R')
+source('../src/format_utils.R')
 
 # A good reference: https://www.tidytextmining.com/
 
@@ -8,6 +8,7 @@ testfile <- '../data/maildir/fischer-m/sent/21.'
 
 email_stats <- function(row) {
   
+  row <- as.list(row)
   # Convert into a tidy dataframe with stopwords
   email.file <- row$EmailLocation
   email.body <- data_frame(email.body=parse_file_body(email.file))
@@ -32,32 +33,38 @@ email_stats <- function(row) {
     mutate(linenumber = row_number()) %>%
     ungroup() %>%
     unnest_tokens(word, email.body) %>%
-    anti_join(stop_words)
+    anti_join(stop_words, by='word')
   
   # Get basic count stats after stopword removal
   avg.word.length <- mean(str_length(body.df$word))
+  if (is.na(avg.word.length)) avg.word.length <- 0
+  
   word.count <- nrow(body.df)
   
   # Get a sentiment score for the email
   bing <- get_sentiments("bing")
   body.sentiment <- body.df %>%
-    inner_join(bing) %>%
+    inner_join(bing, by='word') %>%
     group_by(sentiment) %>%
     summarise(count=n())
   sentiment <- sum(filter(body.sentiment, sentiment=='negative')$count)
   neg.sentiment <- sum(filter(body.sentiment, sentiment=='negative')$count)/
     sum(body.sentiment$count)
-
+  if (is.nan(neg.sentiment)) neg.sentiment <- 0.5 # Neutral
+  
+  # Get time of day and day of week (should these be factors?)
   # return stats as an attribute list  
   list(
     word.count=word.count,
     avg.word.length=avg.word.length,
     num.lines=num.lines,
-    sentiment=sentiment,
+    sentiment=neg.sentiment,
     num.recipients=num.recipients,
     p.punct.char=p.punct.char,
     p.alpha.char=p.alpha.char,
-    p.numeric.char=p.numeric.char
+    p.numeric.char=p.numeric.char,
+    wday=wday(row$Date),
+    hour=hour(row$Date)
   )
 }
 

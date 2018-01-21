@@ -1,0 +1,154 @@
+---
+title: "Train Model Identify Single User"
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+Head the dataset of all emails and create a subset to train on a single user, selected arbitrarily from users who sent a lot of emails.   Set the random seed so we are repeatable.
+
+```{r}
+set.seed(3456)
+source('../src/format_utils.R')
+headers <- load_headers('headers.csv')
+# email.addr <- "kay.mann@enron.com"  # 16735 emails
+# email.addr <- "steven.kean@enron.com" # 6759 emails
+# email.addr <- "phillip.allen@enron.com" # 2195 emails
+#email.addr <- "mike.carson@enron.com" # 721 emails
+email.addr <- "john.griffith@enron.com" # 392 emails
+source('../src/single_user_model.R')
+emails.from <- get_emails_from(headers, email.addr)
+emails.not.from <- get_random_emails_not_from(headers, email.addr, nrow(emails.from))
+rm(headers)
+emails.from$is.user <- 'Yes'
+emails.not.from$is.user <- 'No'
+emails <- rbind(emails.from, emails.not.from) %>%
+   select(is.user, word.count, avg.word.length, num.lines,
+          sentiment, num.recipients, p.punct.char,
+          p.alpha.char, p.numeric.char, wday, hour)
+emails$is.user <- as.factor(emails$is.user)
+```
+
+Look at different groups of three variables
+
+```{r}
+require(caret)
+require(AppliedPredictiveModeling)
+transparentTheme(trans = .4)
+plotPairs <- function(indx) {
+  i <- 2*indx; j <- i+1
+  featurePlot(x = emails[, i:j],
+              y = emails$is.user, 
+              plot = "pairs",
+              auto.key = list(columns = 2)) 
+}
+plotPairs(1)
+plotPairs(2)
+plotPairs(3)
+plotPairs(4)
+plotPairs(5)
+```
+
+Split into training and test set.  The center and scale predictors based on the training set.
+
+```{r}
+train.idx <- createDataPartition(emails$is.user, p = .8, 
+                                  list = FALSE, 
+                                  times = 1)
+emails.train <- emails[train.idx,]
+emails.test <- emails[-train.idx,]
+prepro <- preProcess(emails.train, method = c("center", "scale"))
+train <- predict(prepro, emails.train)
+test <- predict(prepro, emails.test)
+```
+
+Do a PCA visualization to see if there are natural clusters.
+
+```{r}
+prepro <- preProcess(emails.train, method="pca", pcaComp=2)
+train.pca <- predict(prepro, emails.train)
+test.pca <- predict(prepro, emails.test)
+xyplot(PC1 ~ PC2,
+       data = test.pca,
+       groups = is.user, 
+       auto.key = list(columns = 2))
+```
+
+Fit a logistic regression model.  
+
+```{r}
+lr.model <- glm(is.user ~.,family=binomial(link='logit'), data=train)
+lr.model
+```
+
+Fit a basic random forest model
+
+```{r}
+rf.model <- train(is.user ~ ., method='rf', data=train)
+rf.model
+```
+
+Train a gradient boosting machine (GBM) with 10-folder cross-validation over 10 resamplings.
+Reset the seed so results are consistent.
+See [Caret Reference](http://topepo.github.io/caret/model-training-and-tuning.html).  GBMs report [good results
+for two classes](http://fastml.com/what-is-better-gradient-boosted-trees-or-random-forest/) but require more tuning than random forests.  Parallelize across 14 of my 16 CPU Cores and search for optimal parameter settings
+```{r}
+require(doMC)
+registerDoMC(cores = 14)
+fitControl <- trainControl(method = "repeatedcv",
+                           number = 10,
+                           repeats = 10,
+                           allowParallel=TRUE)
+gbmGrid <-  expand.grid(interaction.depth = c(5, 7, 10), 
+                        n.trees = (1:3)*50,
+                        shrinkage = c(0.5, 0.1),
+                        n.minobsinnode = c(5,10, 15))
+set.seed(2531)
+gbm.model <- train(is.user ~ ., data = train, 
+                   method = "gbm", 
+                   trControl = fitControl,
+                   verbose = FALSE,
+                   tuneGrid = gbmGrid)
+gbm.model
+```
+
+```{r}
+trellis.par.set(caretTheme())
+plot(gbm.model)
+```
+
+# Variable Importance
+
+If this is any indication, the percentages of characters distinguish these people.  We see for example that day of the week probably isn't important.  The percentage of [a-z] characters, time of day, etc., is important.
+
+
+```{r}
+varImp(rf.model)
+# varImp(gbm.model)
+```
+
+# Model Accuracy
+
+Compare the training and test set on each of the models.  The random forest wtih default settings dramatically out performs GBMs, where we did a lot of searching for optimal parameters.  We also see that logistic regression performs pretty well.  The fact that RF does slightly better on the test data (unusual but it happens) indicates that the model isn't overfit but also that we might want more test data.
+
+```{r}
+cat("Results on test set for Logistic Regression model:\n")
+lr.predict <- predict(lr.model, test)
+lr.predict1 <- ifelse(lr.predict > 0.5,'Yes','No')
+c(Accuracy=mean(lr.predict1==test$is.user))
+cat("Results on test set for Random Forest model:\n")
+rf.predict <- predict(rf.model, test)
+postResample(pred = rf.predict, obs = test$is.user)
+cat("Results on test set for Gradient Boosted model:\n")
+gbm.predict <- predict(gbm.model, test)
+postResample(pred = gbm.predict, obs = test$is.user)
+
+```
+
+Let's take a deeper look at the accuracy of the Random Forest.  
+
+```{r}
+confusionMatrix(data = rf.predict, reference = test$is.user, mode = "prec_recall")
+```

@@ -3,12 +3,14 @@ title: "Enron Social Network Analysis"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
-
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*. 
+The purpose of this is notebook is to explore the social network structure of the Enron emails.  
 
 ```{r}
 require(igraph)
+source('../src/sna.R')
+source('../src/format_utils.R')
+headers <- load_headers('headers.csv')
+A <- create_adjacency_matrix(headers)
 ```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.

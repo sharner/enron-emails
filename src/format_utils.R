@@ -10,7 +10,9 @@ load_headers <- function(fn) {
 
 decode_emails <- function(l) {
   emails <- unlist(str_split(l, ","))
+  # Some anomalous characters in some emails
   emails <- str_replace_all(emails, "([:space:]|\\<|\\>)", "")
+  # Remove any blank entries
   emails[!is.na(emails) & emails != ""]
 }
 
