@@ -10,11 +10,23 @@ require(igraph)
 source('../src/sna.R')
 source('../src/format_utils.R')
 headers <- load_headers('headers.csv')
-A <- create_adjacency_matrix(headers)
+recip.pairs <- create_recipient_pairs(headers[100000:110000,])
+recip.graph <- recip.pairs %>%
+  filter(n > 20) %>%
+  graph_from_data_frame()
 ```
 
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+Graph the social network of senders to recipients
 
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+```{r}
+require(ggraph)
+set.seed(2016)
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+ggraph(recip.graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
 
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+```
