@@ -13,11 +13,12 @@ Head the dataset of all emails and create a subset to train on a single user, se
 set.seed(3456)
 source('../src/format_utils.R')
 headers <- load_headers('headers.csv')
-# email.addr <- "kay.mann@enron.com"  # 16735 emails
-# email.addr <- "steven.kean@enron.com" # 6759 emails
+email.addr <- "kay.mann@enron.com"  # 16735 emails
+# email.addr <- "steven.kean@enron.com" # 6759 emails - Vice President and Chief of Staff
+# email.addr <- "kenneth.lay@enron.com" # 36 emails
 # email.addr <- "phillip.allen@enron.com" # 2195 emails
-#email.addr <- "mike.carson@enron.com" # 721 emails
-email.addr <- "john.griffith@enron.com" # 392 emails
+# email.addr <- "mike.carson@enron.com" # 721 emails
+# email.addr <- "john.griffith@enron.com" # 392 emails
 source('../src/single_user_model.R')
 emails.from <- get_emails_from(headers, email.addr)
 emails.not.from <- get_random_emails_not_from(headers, email.addr, nrow(emails.from))
@@ -121,7 +122,7 @@ plot(gbm.model)
 
 # Variable Importance
 
-If this is any indication, the percentages of characters distinguish these people.  We see for example that day of the week probably isn't important.  The percentage of [a-z] characters, time of day, etc., is important.
+If this is any indication, the percentages of characters distinguish these people.  We see for example that sentiment and day of the week probably isn't important.  The percentage of different types of characters, time of day, etc., is important.
 
 
 ```{r}

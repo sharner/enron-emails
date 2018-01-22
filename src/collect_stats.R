@@ -42,6 +42,8 @@ email_stats <- function(row) {
   word.count <- nrow(body.df)
   
   # Get a sentiment score for the email
+  # Good example of sentiment:
+  # https://cran.r-project.org/web/packages/tidytext/vignettes/tidytext.html
   bing <- get_sentiments("bing")
   body.sentiment <- body.df %>%
     inner_join(bing, by='word') %>%
@@ -66,15 +68,4 @@ email_stats <- function(row) {
     wday=wday(row$Date),
     hour=hour(row$Date)
   )
-}
-
-author_stats <- function(emails) {
-  for (e in emails) {
-    
-  }
-  # average non-stopwords per email
-  # overall sentiment
-  # word frequencies
-  # average word length
-  # average emails sent per day
 }

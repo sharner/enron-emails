@@ -3,7 +3,7 @@ title: "Enron Social Network Analysis"
 output: html_notebook
 ---
 
-The purpose of this is notebook is to explore the social network structure of the Enron emails.  
+The purpose of this is notebook is to explore the social network structure of the Enron emails.  This paper [http://ww2.amstat.org/publications/jse/v23n2/hardin.pdf](Network Analysis with the Enron Email Corpus) also gives some good insights.  We'll reproduce some of those results here. 
 
 ```{r}
 require(igraph)
