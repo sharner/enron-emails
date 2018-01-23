@@ -1,10 +1,7 @@
 require(tidyverse)
 require(tidytext)
 library(tidyr)
-require(janeaustenr) # remove later
 source('../src/parse_input.R')
-
-
 
 create_recipient_pairs <- function(headers) {
   sender.pairs <- unlist(apply(headers, 1, function(r) {

@@ -60,4 +60,3 @@ headers %>%
   ggplot(aes(Date)) + 
   geom_freqpoly(binwidth = 86400*7)
 ```
-

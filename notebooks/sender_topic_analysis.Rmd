@@ -1,0 +1,109 @@
+---
+title: "User Topic Analysis"
+output:
+  html_document:
+    df_print: paged
+---
+
+Create a topic model on three different users.  See if we can then match emails to users.  A lot of this content was inspired by (https://www.tidytextmining.com/topicmodeling.html)[Topic Mining].
+
+```{r}
+source('../src/format_utils.R')
+headers <- load_headers('headers.csv')
+steven <- "steven.kean@enron.com" # 6759 emails - Vice President and Chief of Staff
+phillip <- "phillip.allen@enron.com" # 2195 emails
+mike <- "mike.carson@enron.com" # 721 emails
+```
+
+Create a data frame with all the emails from the three different authors
+
+```{r}
+source('../src/lda.R')
+authors <- data_frame(author=c(steven, phillip, mike))
+email_df <- get_tidy_email_from_authors(headers, authors)
+email_dtm <- get_dtm_from_authors(email_df)
+email_df
+```
+
+Use the LDA algorithm to do a topic analysis, in which each author corresponds to a topic (ideally).  The Beta matrix is the probability that a term was generated from a topic.
+
+```{r}
+require(topicmodels)
+email_dla <- LDA(email_dtm, k = 3, control = list(seed = 1719))
+email_topics <- tidy(email_dla, matrix = "beta")
+``` 
+
+Visualize the top terms in each of the three categories
+
+```{r}
+require(ggplot2)
+top_terms <- email_topics %>%
+  group_by(topic) %>%
+  top_n(5, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+
+See how well emails align with topic.  Use the gamma matrix, which is a per-document-per-topicp probability.  We'll also
+
+```{r}
+email_gamma <- tidy(email_dla, matrix = "gamma") %>%
+   separate(document, c("author", "email"), sep = "_", convert = TRUE)
+email_gamma
+```
+
+View the probability of each email against each each topic.  This shows that the classification isn't very clean.  Phillip corresponds mostly to category one; Steven corresponds to category two; and Mike corresponds to category 3.
+
+```{r}
+email_gamma %>%
+  mutate(title = reorder(author, gamma * topic)) %>%
+  ggplot(aes(factor(topic), gamma)) +
+  geom_boxplot() +
+  facet_wrap(~ title)
+```
+
+Use the topics to classify each email.
+
+```{r}
+email_classifications <- email_gamma %>%
+  group_by(author, email) %>%
+  top_n(1, gamma) %>%
+  ungroup()
+email_topics <- email_classifications %>%
+  count(author, topic) %>%
+  group_by(author) %>%
+  top_n(1, n) %>%
+  ungroup() %>%
+  transmute(consensus = author, topic)
+email_classifications
+email_topics
+```
+
+Create a visual display of a confusion matrix.  Mike's emails are attributed mostly to him.  However, there is a lot of confusion between Phillip and Steven, suggesting that they author emails on similar topics.
+
+```{r}
+require(scales)
+augment(email_dla, data = email_dtm) %>%
+  separate(document, c("author", "email"), sep = "_", convert = TRUE) %>%
+  inner_join(email_topics, by = c(".topic" = "topic")) %>%
+  count(author, consensus, wt = count) %>%
+  group_by(author) %>%
+  mutate(percent = n / sum(n)) %>%
+  ggplot(aes(consensus, author, fill = percent)) +
+  geom_tile() +
+  scale_fill_gradient2(high = "red", label = percent_format()) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1),
+        panel.grid = element_blank()) +
+  labs(x = "Authors were assigned to",
+       y = "Author words came from",
+       fill = "% of assignments")
+
+```
+
