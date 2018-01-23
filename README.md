@@ -4,7 +4,7 @@ This is an analysis of Enron Emails.  It is a work in progress with the ulimate 
 
 # Importing the Data
 
-Download the Enron [Email Data Set](https://www.cs.cmu.edu/~enron/).  Then run follow the steps in [input_analysis.Rmd]|(https://github.com/sharner/enron-emails/blob/master/notebooks/input_analysis.Rmd).
+Download the Enron [Email Data Set](https://www.cs.cmu.edu/~enron/).  Then run follow the steps in [input_analysis.Rmd](https://github.com/sharner/enron-emails/blob/master/notebooks/input_analysis.Rmd).
 
 # Topic Analysis
 
