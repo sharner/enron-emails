@@ -4,7 +4,7 @@ require(lubridate)
 load_headers <- function(fn) {
   headers <- read_csv(fn)
   headers$Date <- parse_date_time(str_sub(headers$Date, start=6), order="%d %B %Y %H")
-  headers$From <- decode_emails(headers$From)
+  headers$From <- str_replace_all(headers$From, "([:space:]|\\<|\\>)", "")
   as_tibble(headers)
 }
 

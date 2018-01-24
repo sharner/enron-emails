@@ -1,6 +1,8 @@
 ---
 title: "Basic PaAnalysis of Enron Emails"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 Begin by parsing the data to extract headers from all emails.  Write headers to a CSV file.  I found a few emails with characters that could not be encoding, which I fixed by hand.  Interestingly, these emails were from Enron Japan, expressing concerns to management.

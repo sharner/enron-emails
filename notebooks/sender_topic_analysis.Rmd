@@ -25,7 +25,7 @@ email_dtm <- get_dtm_from_authors(email_df)
 email_df
 ```
 
-Use the LDA algorithm to do a topic analysis, in which each author corresponds to a topic (ideally).  The Beta matrix is the probability that a term was generated from a topic.
+Use the LDA algorithm to do a topic analysis, in which each author corresponds to a topic (ideally).  The Beta matrix is the probability that a term was generated from a topic.  LDA is a generative probabilistic model, that assumes a Dirichlet prior over the latent topics.
 
 ```{r}
 require(topicmodels)

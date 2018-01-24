@@ -1,32 +1,72 @@
 ---
 title: "Enron Social Network Analysis"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 The purpose of this is notebook is to explore the social network structure of the Enron emails.  This paper [http://ww2.amstat.org/publications/jse/v23n2/hardin.pdf](Network Analysis with the Enron Email Corpus) also gives some good insights.  We'll reproduce some of those results here.
 
 ```{r}
-#require(igraph)
-#source('../src/sna.R')
-#source('../src/format_utils.R')
-#headers <- load_headers('headers.csv')
-#recip.pairs <- create_recipient_pairs(headers)
-#recip.graph <- recip.pairs %>%
-#  filter(n > 20) %>%
-#  graph_from_data_frame()
+require(igraph)
+source('../src/sna.R')
+source('../src/format_utils.R')
+headers <- load_headers('headers.csv')
+recip.pairs<- create_recipient_pairs(headers)
 ```
 
 Graph the social network of senders to recipients
 
 ```{r}
-#require(ggraph)
-#set.seed(2016)
-#a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
-#ggraph(recip.graph, layout = "fr") +
-#  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE,
-#                 arrow = a, end_cap = circle(.07, 'inches')) +
-#  geom_node_point(color = "lightblue", size = 5) +
-#  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
-#  theme_void()
+require(ggraph)
+set.seed(2016)
+recip.graph <- recip.pairs %>%
+  filter(n > 500) %>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+ggraph(recip.graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, 
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) +
+  theme_void()
 
 ```
+
+
+
+Graph the social network of senders to recipients
+
+```{r}
+require(ggraph)
+set.seed(2016)
+recip.graph <- recip.pairs %>%
+  filter(n > 1000) %>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+ggraph(recip.graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, 
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) + 
+  theme_void()
+
+```
+
+Graph the social network of senders to recipients
+
+```{r}
+require(ggraph)
+set.seed(2016)
+recip.graph <- recip.pairs %>%
+  filter(n > 5000) %>%
+  graph_from_data_frame()
+a <- grid::arrow(type = "closed", length = unit(.15, "inches"))
+ggraph(recip.graph, layout = "fr") +
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, 
+                 arrow = a, end_cap = circle(.07, 'inches')) +
+  geom_node_point(color = "lightblue", size = 5) + 
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1) +
+  theme_void()
+
+```
+
+

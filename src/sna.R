@@ -8,7 +8,7 @@ create_recipient_pairs <- function(headers) {
     r <- as.list(r)
     sender <- r$From
     recipients <- collect_recipients(r)
-    cat('.')
+    # cat('.')
     unlist(apply(recipients, 1, function(r) list(sender, r)))
   }))
   sender.pairs <- as.tibble(matrix(sender.pairs, ncol=2, byrow=TRUE))
